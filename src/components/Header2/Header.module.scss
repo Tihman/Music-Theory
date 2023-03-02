@@ -1,0 +1,48 @@
+.root {
+  background-color: #C490D1; 
+  // background-color: #ED6A5A; 
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 30px;
+}
+
+.inner {
+  display: flex;
+  justify-content: space-between;
+}
+
+.logo {
+  background-color: lightgray;
+  color: black;
+  font-weight: 700;
+  line-height: 45px;
+  text-align: center;
+  border-radius: 5px;
+  text-decoration: none;
+  border: 2px solid white;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.buttons {
+  button {
+    background-color: lightgray;
+    color: black;
+    font-weight: 700;
+    line-height: 35px;
+    margin-left: 10px;
+    border-radius: 5px;
+    border: 2px solid white;
+
+    &:hover {
+      cursor: pointer;
+      background-color: #ED6A5A; //Bittersweet
+    }
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
