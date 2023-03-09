@@ -1,5 +1,4 @@
-import React from 'react';
-import Button from '@mui/material/Button';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -9,12 +8,20 @@ import { logout, selectIsAuth } from '../../redux/slices/auth';
 
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import AlbumIcon from '@mui/icons-material/Album';
 import BlurOnIcon from '@mui/icons-material/BlurOn';
 import StackedBarChartIcon from '@mui/icons-material/StackedBarChart';
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import CloseIcon from "@mui/icons-material/Close";
+import Divider from "@mui/material/Divider";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import PianoIcon from '@mui/icons-material/Piano';
+import Button from "@mui/material/Button";
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 export const Header2 = () => {
   const dispatch = useDispatch();
@@ -27,13 +34,12 @@ export const Header2 = () => {
     }
   };
 
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
+  const [open, setState] = useState(false);
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setState(open);
   };
 
   return (
@@ -41,61 +47,83 @@ export const Header2 = () => {
       <Container maxWidth="lg">
         <div className={styles.inner}>
             <div>
-              <IconButton
-                id="demo-positioned-button"
-                edge="start"
-                color="inherit"
-                aria-label="menu"
-                sx={{ mr: 20, 
-                      mt: 0.5}}
-                aria-controls={open ? 'demo-positioned-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? 'true' : undefined}
-                onClick={handleClick}
-              >
+              <IconButton 
+                edge="start" 
+                color="inherit" 
+                aria-label="open drawer" 
+                onClick={toggleDrawer(true)}
+                sx={{ 
+                  mr: 2,
+                }}
+              > 
                 <MenuIcon />
               </IconButton>
-              <Menu
-                id="demo-positioned-menu"
-                aria-labelledby="demo-positioned-button"
-                anchorEl={anchorEl}
+              <Drawer
+                anchor="left"
                 open={open}
-                onClose={handleClose}
-                sx={{ mt:1.5}}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
-                }}
+                onClose={toggleDrawer(false)}
+                onOpen={toggleDrawer(true)}
               >
-                <MenuItem divider={true} onClick={handleClose}>
-                  <ContentCutIcon sx={{ mr:2}} fontSize="small" />
-                  <Link to="/cut-audio">
-                    <div>Инструмент для обрезки аудиозаписи</div>
-                  </Link>
-                </MenuItem>
-                <MenuItem divider={true} onClick={handleClose}>
-                  <AlbumIcon sx={{ mr:2}} fontSize="small" />
-                  {/* <Link to="/bpm"> */}
-                    <div>Инструмент для определения BPM (Темпа)</div>
-                  {/* </Link> */}
-                  </MenuItem>
-                <MenuItem onClick={handleClose}>
-                  <BlurOnIcon sx={{ mr:2}} fontSize="small" />
-                  {/* <Link to="/effects"> */}
-                    <div>Инструмент для добавления эффектов</div>
-                  {/* </Link> */}
-                </MenuItem>
-                <MenuItem onClick={handleClose}>
-                  <StackedBarChartIcon sx={{ mr:2}} fontSize="small" />
-                  {/* <Link to="/spectrogram"> */}
-                    <div>Инструмент для получения спектрограммы</div>
-                  {/* </Link> */}
-                </MenuItem>
-              </Menu>
+                <Box sx={{
+                  p: 4,
+                  height: 1,
+                  backgroundColor: "#dbc8ff",
+                }}>
+
+                  <IconButton sx={{mb: 2}}>
+                    <CloseIcon onClick={toggleDrawer(false)} sx={{ml: 0.5, mb: 0.5}} />
+                  </IconButton>
+
+                  <Divider sx={{mb: 2}} />
+
+                  <Box sx={{mb: 2}}>
+                    <Link to="/cut-audio">
+                      <ListItemButton>    
+                        <ListItemIcon>
+                          <ContentCutIcon sx={{ mr:2}} fontSize="small" /> 
+                        </ListItemIcon>
+                        <ListItemText primary="Инструмент для обрезки аудиозаписи" /> 
+                      </ListItemButton>
+                    </Link>
+
+                    <Link to="/bpm">
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <AlbumIcon sx={{ mr:2}} fontSize="small" />
+                      </ListItemIcon >
+                      <ListItemText primary="Инструмент для определения BPM (Темпа)" />
+                    </ListItemButton>
+                    </Link>
+
+                    <Link to="/effects">
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <BlurOnIcon sx={{ mr:2}} fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="Инструмент для добавления эффектов" />
+                    </ListItemButton>
+                    </Link>
+
+                    <Link to="/spectrogram">
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <StackedBarChartIcon sx={{ mr:2}} fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="Инструмент для получения спектрограммы" />
+                    </ListItemButton>
+                    </Link>
+
+                    <Link to="/piano">
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <PianoIcon sx={{ mr:2}} fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="Пианино" />
+                    </ListItemButton>
+                    </Link>
+                  </Box>
+                </Box>
+            </Drawer>
             </div>
           <Link className={styles.logo} to="/">
             <div>Сайт для исследования и обработки звуковой информации</div>
@@ -105,11 +133,8 @@ export const Header2 = () => {
               <>
                 <Link to="/add-post">
                   <Button >Написать статью</Button>
-                  {/* variant="contained" */}
                 </Link>
                 <Button onClick={onClickLogout} >
-                  {/* variant="contained" */}
-                  {/* color="error" */}
                   Выйти
                 </Button>
               </>

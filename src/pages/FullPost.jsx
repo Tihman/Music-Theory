@@ -4,7 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import axios from '../axios';
 
 import { Post } from "../components/Post";
-// import { Index } from "../components/AddComment";
 
 export const FullPost = () => {
   const [data, setData] = React.useState();
@@ -37,6 +36,7 @@ export const FullPost = () => {
         user={data.user}
         createdAt={data.createdAt}
         viewsCount={data.viewsCount}
+        tags={data.tags}
         isFullPost
       >
         <ReactMarkdown children={data.text} />

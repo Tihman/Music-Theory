@@ -3,19 +3,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import Grid from '@mui/material/Grid';
 
 import { Post } from '../components/Post';
-import { fetchPosts } from '../redux/slices/posts';
+import { fetchPosts, fetchTags } from '../redux/slices/posts';
 
 
 export const Home = () => {
   const dispatch = useDispatch();
   const userData = useSelector((state) => state.auth.data);
-  const { posts } = useSelector((state) => state.posts);
+  const { posts, tags } = useSelector((state) => state.posts);
 
   const isPostsLoading = posts.status === 'loading';
-  // const isTagsLoading = tags.status === 'loading';
+  const isTagsLoading = tags.status === 'loading';
   React.useEffect(() => {
     dispatch(fetchPosts());
-    // dispatch(fetchTags());
+    dispatch(fetchTags());
   },[]);
   return (
     <>
@@ -35,6 +35,7 @@ export const Home = () => {
               imageUrl={obj.imageUrl ? `http://localhost:4444${obj.imageUrl}` : ''}
               user={obj.user}
               createdAt={obj.createdAt}
+              tags={obj.tags}
               viewsCount={obj.viewsCount}
               isEditable={userData?._id === obj.user._id}
             />
