@@ -10,5 +10,4 @@ export {CutExample} from "./CutExample"
 export {Bpm} from "./Bpm"
 export {Effects} from "./Effects"
 export {Spectrogram} from "./Spectrogram"
-export {Something} from "./Something"
 

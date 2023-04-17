@@ -14,11 +14,6 @@ export const CutAudio = () => {
         <h1>Обрезка аудио</h1>
       </header>
       <main>
-        <div className="main">
-          <a href="/">
-            <button>На главную</button>
-          </a> 
-        </div> 
         <div className="player-container">
           <CutExample/>
         </div>

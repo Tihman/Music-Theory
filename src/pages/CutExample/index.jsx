@@ -1,11 +1,8 @@
-import { ConstructionOutlined } from '@mui/icons-material';
-import React, { Fragment, useState, useEffect, useRef } from 'react'
-// import "./style1.css"
+import React, { Fragment, useState, useEffect} from 'react'
 import WaveSurfer from 'wavesurfer.js';
-// import ffmpeg from 'fluent-ffmpeg';
+import {saveAs} from 'file-saver';
 var RegionsPlugin = require("wavesurfer.js/dist/plugin/wavesurfer.regions.min.js");
 var CursorPlugin = require("wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js");
-var audioFile, audioBuffer, totalAudioDuration, processedAudio, arrBuffer
 
 export const CutExample = () => {
   let [isPlaying, setIsPlaying] = useState(false)
@@ -46,7 +43,6 @@ export const CutExample = () => {
 
     if (waveSurfer) {
         waveSurfer.on("ready", function() {
-			// readAndDecodeAudio();
             var totalAudioDuration = waveSurfer.getDuration();
             document.getElementById('time-total').innerText = Math.floor(totalAudioDuration/60)+':'+('0'+ Math.floor(totalAudioDuration%60)).slice(-2);
         });
@@ -81,138 +77,73 @@ export const CutExample = () => {
     })
   }
 
-  async function readAndDecodeAudio() {
-	arrBuffer = null;
-	audioBuffer = null;
+function bufferToWave(abuffer, offset, len) {
 
-	await readAudio(audioFile)
-			.then((results) => {
-				arrBuffer = results.result;
-			})
-			.catch((error) => {
-				window.alert("Some Error occured");
-				console.log(error)
-				return;
-			}); 
-
-	await new AudioContext().decodeAudioData(arrBuffer)
-				.then((res) => {
-					audioBuffer = res;
-				})
-				.catch((err) => {
-					window.alert("Can't decode Audio");
-					console.log(err)
-					return;
-				});
-}
-
-async function trimAudio(region) {
-	console.log(region)
-	var startPoint = Math.floor((region.start*audioBuffer.length)/totalAudioDuration);
-	var endPoint = Math.ceil((region.end*audioBuffer.length)/totalAudioDuration);
-	var audioLength = endPoint - startPoint;
-
-	var trimmedAudio = new AudioContext().createBuffer(
-		audioBuffer.numberOfChannels,
-		audioLength,
-		audioBuffer.sampleRate
-	);
-
-	for(var i=0;i<audioBuffer.numberOfChannels;i++){
-		trimmedAudio.copyToChannel(audioBuffer.getChannelData(i).slice(startPoint,endPoint),i);
+	var numOfChan = abuffer.numberOfChannels,
+		length = len * numOfChan * 2 + 44,
+		buffer = new ArrayBuffer(length),
+		view = new DataView(buffer),
+		channels = [], i, sample,
+		pos = 0;
+  
+	// write WAVE header
+	setUint32(0x46464952);                         // "RIFF"
+	setUint32(length - 8);                         // file length - 8
+	setUint32(0x45564157);                         // "WAVE"
+  
+	setUint32(0x20746d66);                         // "fmt " chunk
+	setUint32(16);                                 // length = 16
+	setUint16(1);                                  // PCM (uncompressed)
+	setUint16(numOfChan);
+	setUint32(abuffer.sampleRate);
+	setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+	setUint16(numOfChan * 2);                      // block-align
+	setUint16(16);                                 // 16-bit (hardcoded in this demo)
+  
+	setUint32(0x61746164);                         // "data" - chunk
+	setUint32(length - pos - 4);                   // chunk length
+  
+	// write interleaved data
+	for(i = 0; i < abuffer.numberOfChannels; i++)
+	  channels.push(abuffer.getChannelData(i));
+  
+	while(pos < length) {
+	  for(i = 0; i < numOfChan; i++) {             // interleave channels
+		sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+		sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
+		view.setInt16(pos, sample, true);          // update data chunk
+		pos += 2;
+	  }
+	  offset++                                     // next source sample
 	}
-
-	var audioData = {
-		channels: Array.apply(null,{length: trimmedAudio.numberOfChannels})
-					.map(function(currentElement, index) {
-						return trimmedAudio.getChannelData(index);
-					}),
-		sampleRate: trimmedAudio.sampleRate,
-    	length: trimmedAudio.length,
+  
+	// create Blob
+	return URL.createObjectURL(new Blob([buffer], {type: "audio/wav"}));
+  
+	function setUint16(data) {
+	  view.setUint16(pos, data, true);
+	  pos += 2;
 	}
-	
-	var temp = null;
-	await encodeAudioBufferLame(audioData)
-		.then((res) => {
-			console.log(res);
-			downloadAudio();
-		})
-		.catch((c) => {
-			console.log(c);
-		});
-	console.log(audioData);
+  
+	function setUint32(data) {
+	  view.setUint32(pos, data, true);
+	  pos += 4;
+	}
 }
-
-function encodeAudioBufferLame( audioData ) {
-	return new Promise( (resolve, reject) => {
-		var worker = new Worker('./worker/worker.js');
-		
-		worker.onmessage = (event) => {
-			if(event.data != null){
-				resolve(event.data);
-			}
-			else{
-				reject("Error");
-			}
-			var blob = new Blob(event.data.res, {type: 'audio/mp3'});
-      		processedAudio = new window.Audio();
-      		processedAudio.src = URL.createObjectURL(blob);
-		};
-
-		worker.postMessage({'audioData': audioData});
-	});		
-}
-
-function readAudio(file) {	
-	return new Promise((resolve, reject) => {
-					var reader = new FileReader();	
-					reader.readAsArrayBuffer(file);
-					console.log(reader)
-
-					reader.onload = function() {
-						console.log("Audio Loaded");
-						resolve(reader);
-					}
-
-					reader.onerror = function(error){
-						console.log("Error while reading audio");
-						reject(error);
-					}
-
-					reader.onabort = function(abort){
-						console.log("Aborted");
-						console.log(abort);
-						reject(abort);
-					}
-
-				})
-}
-
 
 function playTrack(regionId) {
 	waveSurfer.regions.list[regionId].play();
 }
 
-function downloadTrack(regionStart, regionEnd) {
-	// trimAudio(waveSurfer.regions.list[regionId]);
-	// console.log(regionStart,regionEnd)
-	// const command = ffmpeg(regionStart, regionEnd);
-	// command.outputOptions([`-f mp3`]).save(`./selected_region.mp3`);
-	// command.run();
+function downloadTrack(regionId) {
+	let originalBuffer = bufferToWave(waveSurfer.backend.buffer, 0, waveSurfer.backend.buffer.length);
+	saveAs(originalBuffer, `selected-region.mp3`); 
 }
 
 const deleteTrack = (regionId) => {
 	waveSurfer.regions.list[regionId].remove();
 	setRows(prevState => prevState.filter(el => el.region !== regionId))
 }
-
-function downloadAudio() {
-	var anchorAudio = document.createElement("a");
-    anchorAudio.href = processedAudio.src;
-	anchorAudio.download = "output.mp3";
-	anchorAudio.click();
-}
-
 
   return (
     <Fragment>
@@ -246,7 +177,7 @@ function downloadAudio() {
                 		<td>{row.start}</td >
                 		<td>{row.end}</td >
                 		<td><button onClick={() => playTrack(row.region)}><i className='fa-solid fa-play' /></button></td>
-                		<td><button onClick={() => downloadTrack(row.start, row.end)}><i className='fa-solid fa-arrow-down' /></button></td>
+                		<td><button onClick={() => downloadTrack(row.region)}><i className='fa-solid fa-arrow-down' /></button></td>
                 		<td><button onClick={() => deleteTrack(row.region)}><i className="fa-solid fa-xmark" /></button></td>
             		</tr>) )}   
           		</tbody>
