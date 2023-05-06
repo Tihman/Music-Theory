@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import "./styleEffect.css";
-require ("https://cdnjs.cloudflare.com/ajax/libs/pizzicato/0.6.4/Pizzicato.min.js");
 
 export const Effects = () => {
 //good delay
